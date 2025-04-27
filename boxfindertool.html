@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Box Finder Tool</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {--bg-color: #f4f4f4; --container-bg: #ffffff; --text-color: #333333; --text-muted: #666666; --text-placeholder: #999999; --border-color: #cccccc; --input-bg: #ffffff; --results-bg: #e9e9e9; --button-bg: #ff6600; --button-hover-bg: #e65c00; --button-text: #ffffff; --link-color: #007bff; --toggle-bg: #ccc; --toggle-knob: #fff; }
+        html.dark-mode {--bg-color: #121212; --container-bg: #1e1e1e; --text-color: #e0e0e0; --text-muted: #aaaaaa; --text-placeholder: #777777; --border-color: #555555; --input-bg: #333333; --results-bg: #2a2a2a; --button-bg: #e65c00; --button-hover-bg: #ff6600; --button-text: #ffffff; --link-color: #58a6ff; --toggle-bg: #555; --toggle-knob: #fff; }
+
+        body { font-family: 'Poppins', sans-serif; line-height: 1.6; padding: 20px; background-color: var(--bg-color); color: var(--text-color); transition: background-color 0.3s ease, color 0.3s ease; margin: 0; }
+        .container { max-width: 600px; margin: 20px auto; background: var(--container-bg); padding: 30px; padding-bottom: 60px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: background-color 0.3s ease; position: relative; }
+        h1, h2 { font-family: 'Poppins', sans-serif; }
+        h1 { text-align: center; color: var(--text-color); margin-bottom: 20px; margin-top: 0; }
+
+        .input-section, .mode-selection, .results-section { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: var(--text-muted); }
+        input[type="number"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-color); border-radius: 4px; box-sizing: border-box; font-family: 'Poppins', sans-serif; transition: background-color 0.3s ease, border-color 0.3s ease; }
+        input[type="number"]::placeholder { color: var(--text-placeholder); opacity: 1; }
+        .mode-selection fieldset { border: 1px solid var(--border-color); border-radius: 4px; padding: 10px 15px; margin: 0; transition: border-color 0.3s ease; }
+        .mode-selection legend { font-weight: 600; color: var(--text-muted); padding: 0 5px; }
+        .mode-selection label { display: inline-block; margin-right: 15px; margin-bottom: 0; font-weight: 400; color: var(--text-color); }
+        .mode-selection input[type="radio"] { margin-right: 5px; vertical-align: middle; filter: invert(var(--dark-mode-invert, 0)); }
+        html.dark-mode .mode-selection input[type="radio"] { --dark-mode-invert: 1; }
+        #findBoxButton { display: block; width: 100%; padding: 12px; background-color: var(--button-bg); color: var(--button-text); border: none; border-radius: 4px; font-size: 16px; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: background-color 0.3s ease; }
+        #findBoxButton:hover { background-color: var(--button-hover-bg); }
+
+        #results { margin-top: 20px; padding: 15px; background-color: var(--results-bg); border-radius: 4px; border: 1px solid var(--border-color); transition: background-color 0.3s ease, border-color 0.3s ease; }
+        #results p { margin: 5px 0; color: var(--text-color); }
+        #results strong { font-weight: 700; color: var(--text-color); }
+
+        #results p.success {
+            color: #28a745 !important;
+            font-weight: 600;
+        }
+        #results p.error {
+            color: #dc3545 !important;
+            font-weight: 600;
+        }
+        
+        .error { font-weight: 600; }
+        .success { font-weight: 600; }
+
+
+        .dimension-inputs { display: flex; gap: 15px; flex-wrap: wrap; }
+        .dimension-inputs > div { flex: 1; min-width: 120px; }
+        .dimension-inputs input[type="number"] { width: 100%; }
+        .note { font-size: 0.9em; color: var(--text-muted); text-align: center; margin-top: 0; margin-bottom: 10px; }
+        .filter-note { font-size: 0.8em; color: var(--text-muted); margin-top: 8px; }
+
+        .theme-switch-wrapper { position: absolute; bottom: 20px; right: 30px; display: flex; align-items: center; }
+        .theme-icon { font-size: 1.2em; line-height: 1; display: inline-block; color: var(--text-muted); }
+        .icon-dark { margin-right: 8px; }
+        .icon-light { margin-left: 8px; }
+        .theme-switch { display: inline-block; height: 24px; position: relative; width: 44px; }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--toggle-bg); transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: var(--toggle-knob); transition: .4s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--button-bg); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+    </style>
+
+    <script>
+        (function() { try { var theme = localStorage.getItem('theme'); if (theme === 'dark' || theme === null) { document.documentElement.classList.add('dark-mode'); } else { document.documentElement.classList.remove('dark-mode'); } } catch (e) { console.warn("Could not access localStorage for theme setting.", e); } })();
+    </script>
+
+</head>
+<body>
+    <div class="container">
+        <h1>Box Finder Tool</h1>
+        <p class="note">Pricing Data Last Updated: 08/27/2012</p>
+
+        <div class="input-section">
+            <h2>1. Enter Item Dimensions</h2>
+            <p style="font-size:0.9em; color: var(--text-muted); margin-top:-5px; margin-bottom:15px;">Measure your item and enter its length, width, and height in inches</p>
+            <div class="dimension-inputs">
+                <div><label for="itemLength">Length:</label><input type="number" id="itemLength" placeholder="e.g., 10" min="0" step="any"></div>
+                <div><label for="itemWidth">Width:</label><input type="number" id="itemWidth" placeholder="e.g., 8" min="0" step="any"></div>
+                <div><label for="itemHeight">Height:</label><input type="number" id="itemHeight" placeholder="e.g., 6" min="0" step="any"></div>
+            </div>
+        </div>
+
+        <div class="mode-selection">
+            <fieldset>
+                <legend>Select Mode:</legend>
+                <input type="radio" id="modeBalance" name="selectionMode" value="balance" checked>
+                <label for="modeBalance">Balanced</label>
+                <input type="radio" id="modeCheapest" name="selectionMode" value="cheapest">
+                <label for="modeCheapest">Cheapest</label>
+                <input type="radio" id="modeBestFit" name="selectionMode" value="bestFit">
+                <label for="modeBestFit">Best Fit</label>
+            </fieldset>
+        </div>
+
+        <button id="findBoxButton">Find Best Fit Box</button>
+
+        <div class="results-section">
+            <h2>2. Recommended Box</h2>
+            <div id="results"><p>Enter dimensions, select a mode, and click "Find Best Fit Box"</p></div>
+        </div>
+
+        <div class="theme-switch-wrapper">
+            <span class="theme-icon icon-dark">🌙</span>
+            <label class="theme-switch" for="themeCheckbox">
+                <input type="checkbox" id="themeCheckbox" />
+                <span class="slider"></span>
+            </label>
+            <span class="theme-icon icon-light">☀️</span>
+        </div>
+
+    </div>
+
+    <script>
+        const MAX_WASTED_PERCENTAGE = 75.0;
+        const rawBoxData = [ /* ... */ { size: "4x4x24", price: 3.95 }, { size: "18x18x18", price: 5.60 }, { size: "4x4x58", price: 6.95 }, { size: "18x18x24", price: 7.65 }, { size: "6x4x4", price: 1.74 }, { size: "18x18x28 DW", price: 10.11 }, { size: "6x6x6", price: 2.04 }, { size: "19x12x3", price: 3.79 }, { size: "6x6x48", price: 7.78 }, { size: "19x13x6", price: 4.25 }, { size: "8x6x4", price: 2.15 }, { size: "20x20x20", price: 7.95 }, { size: "9x9x6", price: 2.31 }, { size: "22x12x12", price: 4.60 }, { size: "10x6x4", price: 2.17 }, { size: "22x15x15", price: 5.40 }, { size: "10x10x5", price: 2.77 }, { size: "22x22x22 DW", price: 9.99 }, { size: "10x10x10", price: 3.11 }, { size: "23x16x18", price: 5.79 }, { size: "12x8x8", price: 3.15 }, { size: "*24x6x18", price: 8.83 }, { size: "12x9x4", price: 2.85 }, { size: "24x12x12", price: 4.68 }, { size: "12x9x6", price: 2.78 }, { size: "24x14x4", price: 4.10 }, { size: "12x12x6", price: 2.93 }, { size: "24x18x18", price: 6.95 }, { size: "12x12x12", price: 3.52 }, { size: "24x18x24", price: 7.25 }, { size: "12x12x40", price: 7.85 }, { size: "24x24x24", price: 8.65 }, { size: "14x10x10", price: 3.50 }, { size: "24x24x24 DW", price: 12.95 }, { size: "14x14x8 (4)", price: 3.25 }, { size: "*26x5x32", price: 9.92 }, { size: "14x14x14", price: 4.39 }, { size: "26x17x20", price: 6.69 }, { size: "15x12x10", price: 3.75 }, { size: "27x17x12", price: 6.91 }, { size: "15x15x48", price: 10.85 }, { size: "28x11x9", price: 6.50 }, { size: "16x16x4", price: 3.85 }, { size: "28x20x12", price: 7.70 }, { size: "16x16x16", price: 5.25 }, { size: "30x20x25 (DW)", price: 11.15 }, { size: "17x11x2", price: 3.80 }, { size: "30x30x30", price: 13.63 }, { size: "17x11x10", price: 4.26 }, { size: "36x6x36", price: 10.81 }, { size: "18x12x7", price: 4.27 }, { size: "36x18x26 DW", price: 17.95 }, { size: "18x12x12", price: 4.47 }, { size: "40x18x8", price: 10.15 }, { size: "*18x7x25", price: 8.93 }, { size: "*50x8x20", price: 14.85 } ];
+        function parseBoxSize(sizeString) { const cleanedString = sizeString.replace(/(\s*\(.+\)$|\s*DW$|\*)/g, '').trim(); const parts = cleanedString.split('x'); if (parts.length === 3) { const dims = parts.map(Number); if (dims.every(d => !isNaN(d) && d > 0)) { return { l: dims[0], w: dims[1], h: dims[2] }; } } console.warn(`Could not parse box size: ${sizeString}`); return null; }
+        function calculateVolume(l, w, h) { if (isNaN(l) || isNaN(w) || isNaN(h) || l <= 0 || w <= 0 || h <= 0) { return 0; } return l * w * h; }
+        function canFit(itemL, itemW, itemH, boxL, boxW, boxH) { const permutations = [ [itemL, itemW, itemH], [itemL, itemH, itemW], [itemW, itemL, itemH], [itemW, itemH, itemL], [itemH, itemL, itemW], [itemH, itemW, itemL] ]; for (const p of permutations) { if (p[0] <= boxL && p[1] <= boxW && p[2] <= boxH) return true; } return false; }
+        const boxDatabase = rawBoxData.map(box => { const dimensions = parseBoxSize(box.size); if (dimensions) { const volume = calculateVolume(dimensions.l, dimensions.w, dimensions.h); if (volume > 0) { return { ...box, l: dimensions.l, w: dimensions.w, h: dimensions.h, volume: volume }; } } return null; }).filter(box => box !== null);
+
+        const findBoxButton = document.getElementById('findBoxButton');
+        const resultsDiv = document.getElementById('results');
+        const itemLengthInput = document.getElementById('itemLength');
+        const itemWidthInput = document.getElementById('itemWidth');
+        const itemHeightInput = document.getElementById('itemHeight');
+        const modeRadios = document.querySelectorAll('input[name="selectionMode"]');
+        const themeCheckbox = document.getElementById('themeCheckbox');
+
+        function applyTheme(theme) {
+            if (theme === 'dark') { document.documentElement.classList.add('dark-mode'); themeCheckbox.checked = false; }
+            else { document.documentElement.classList.remove('dark-mode'); themeCheckbox.checked = true; }
+        }
+        const initialTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(initialTheme);
+        themeCheckbox.addEventListener('change', () => {
+            const newTheme = themeCheckbox.checked ? 'light' : 'dark';
+            if (newTheme === 'dark') { document.documentElement.classList.add('dark-mode'); }
+            else { document.documentElement.classList.remove('dark-mode'); }
+            localStorage.setItem('theme', newTheme);
+        });
+
+        findBoxButton.addEventListener('click', function() {
+             resultsDiv.innerHTML = '';
+             let selectedMode = 'balance';
+             const checkedRadio = document.querySelector('input[name="selectionMode"]:checked');
+             if (checkedRadio) { selectedMode = checkedRadio.value; }
+
+             const itemL = parseFloat(itemLengthInput.value); const itemW = parseFloat(itemWidthInput.value); const itemH = parseFloat(itemHeightInput.value);
+             if (isNaN(itemL) || isNaN(itemW) || isNaN(itemH) || itemL <= 0 || itemW <= 0 || itemH <= 0) {
+                 // Apply error class to the message itself
+                 resultsDiv.innerHTML = '<p class="error">Please enter a valid positive number for the length, width, and height</p>';
+                 return;
+             }
+             const itemVolume = calculateVolume(itemL, itemW, itemH);
+             if (itemVolume === 0) {
+                 resultsDiv.innerHTML = '<p class="error">Item volume cannot be zero</p>';
+                 return;
+             }
+             let fittingBoxes = boxDatabase.filter(box => canFit(itemL, itemW, itemH, box.l, box.w, box.h));
+             if (fittingBoxes.length === 0) {
+                 resultsDiv.innerHTML = '<p class="error">No suitable box found</p>';
+                 return;
+             }
+             let bestBox; let messagePrefix = ''; let messageSuffix = '';
+
+             switch (selectedMode) {
+                 case 'cheapest': messagePrefix = `<p class="success">Cheapest Option Found:</p>`; fittingBoxes.sort((a, b) => { if (a.price !== b.price) return a.price - b.price; return a.volume - b.volume; }); bestBox = fittingBoxes[0]; messageSuffix = `<p class="filter-note">(Mode: Cheapest - Selected lowest price option that fits)</p>`; break;
+                 case 'bestFit': messagePrefix = `<p class="success">Best Fitting Option Found:</p>`; fittingBoxes.sort((a, b) => { if (a.volume !== b.volume) return a.volume - b.volume; return a.price - b.price; }); bestBox = fittingBoxes[0]; messageSuffix = `<p class="filter-note">(Mode: Best Fit - Selected smallest volume option that fits)</p>`; break;
+                 case 'balance': default: const reasonablySizedBoxes = fittingBoxes.filter(box => { const wastedVolume = box.volume - itemVolume; const wastedPercentage = (box.volume > 0) ? (wastedVolume / box.volume * 100) : 100; return wastedPercentage >= 0 && wastedPercentage <= MAX_WASTED_PERCENTAGE; }); if (reasonablySizedBoxes.length === 0) { fittingBoxes.sort((a, b) => { if (a.price !== b.price) return a.price - b.price; return a.volume - b.volume; }); bestBox = fittingBoxes[0]; messagePrefix = `<p class="success">Most Optimal Option Found (Fallback):</p>`; messageSuffix = `<p class="filter-note">(Mode: Balanced - No boxes below ${MAX_WASTED_PERCENTAGE}% wasted space; showing cheapest overall)</p>`; } else { reasonablySizedBoxes.sort((a, b) => { if (a.price !== b.price) return a.price - b.price; return a.volume - b.volume; }); bestBox = reasonablySizedBoxes[0]; messagePrefix = `<p class="success">Most Optimal Option Found:</p>`; messageSuffix = `<p class="filter-note">(Mode: Balanced - Selected the cheapest option with less than ${MAX_WASTED_PERCENTAGE}% wasted space)</p>`; } break;
+             }
+
+             if (!bestBox) { resultsDiv.innerHTML = '<p class="error">Could not determine best box</p>'; return; }
+             const wastedVol = bestBox.volume - itemVolume; const wastedPerc = (bestBox.volume > 0) ? (wastedVol / bestBox.volume * 100).toFixed(1) : "N/A";
+             resultsDiv.innerHTML = `${messagePrefix} <p><strong>Box Size:</strong> ${bestBox.size}</p> <p><strong>Dimensions (LxWxH):</strong> ${bestBox.l} x ${bestBox.w} x ${bestBox.h} inches</p> <p><strong>Price:</strong> $${bestBox.price.toFixed(2)}</p> <p><strong>Box Volume:</strong> ${bestBox.volume.toFixed(2)} cubic inches</p> <p><strong>Item Volume:</strong> ${itemVolume.toFixed(2)} cubic inches</p> <p><strong>Wasted Space:</strong> ${wastedVol.toFixed(2)} cubic inches (${wastedPerc}%)</p> ${messageSuffix}`;
+        });
+    </script>
+</body>
+</html>
