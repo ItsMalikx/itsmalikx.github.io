@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limbus Company Grinding Calculator</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1d;
+            --card-color: #2c2c31;
+            --primary-text: #f0f0f0;
+            --secondary-text: #b3b3b3;
+            --accent-color: #e54b4b;
+            --accent-hover: #ff6b6b;
+            --input-bg: #3f3f44;
+            --border-color: #4a4a50;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --error-color: #f44336;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        @media (min-width: 800px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--secondary-text);
+            font-size: 0.9em;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--primary-text);
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+        
+        .timeframe-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        
+        .sinner-goal-header, .sinner-goal-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 0.5fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .sinner-goal-header label {
+            margin-bottom: 0;
+            font-weight: bold;
+            color: var(--primary-text);
+        }
+        
+        .sinner-goal-row .remove-btn {
+            background-color: #555;
+            padding: 8px;
+            font-size: 0.8em;
+            margin-top: 0;
+        }
+        .sinner-goal-row .remove-btn:hover {
+            background-color: #777;
+        }
+
+        #results {
+            background-color: #252528;
+            border: 1px solid var(--accent-color);
+            line-height: 1.6;
+        }
+        
+        #results h3 {
+            margin-top: 0;
+            color: var(--accent-hover);
+        }
+        
+        .result-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .result-section:last-child {
+            border-bottom: none;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: var(--primary-text);
+        }
+        .success { color: var(--success-color); }
+        .warning { color: var(--warning-color); }
+        .error { color: var(--error-color); }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Limbus Company Grinding Calculator</h1>
+
+        <!-- Goal Definition -->
+        <div class="card full-width">
+            <h2>1. Define Your Grinding Goal</h2>
+            <div class="sinner-goal-header">
+                <label>Sinner</label>
+                <label>Shards Needed</label>
+                <label>Shards Owned</label>
+                <div></div> <!-- Empty div for alignment with remove button -->
+            </div>
+            <div id="sinner-goals-container">
+                <!-- Sinner rows will be added here by JS -->
+            </div>
+            <button id="add-sinner-btn">Add Sinner to Grind</button>
+            <div class="input-group" style="margin-top: 15px;">
+                <label for="avg-shards-crate">Average Shards per Crate</label>
+                <input type="number" id="avg-shards-crate" value="2">
+            </div>
+             <div class="input-group">
+                <label for="current-crates">Current Egoshard Crates You Have</label>
+                <input type="number" id="current-crates" value="0">
+            </div>
+        </div>
+
+        <!-- Current Resources -->
+        <div class="card full-width">
+            <h2>2. Your Current Resources</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div class="input-group">
+                    <label for="current-modules">Current Enkephalin Modules</label>
+                    <input type="number" id="current-modules" value="0">
+                </div>
+                <div class="input-group">
+                    <label for="current-enkephalin-crates">Current Enkephalin Crates</label>
+                    <input type="number" id="current-enkephalin-crates" value="0">
+                </div>
+                 <div class="input-group">
+                    <label for="max-enkephalin">Max Enkephalin Capacity</label>
+                    <input type="number" id="max-enkephalin" value="60">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Timeframe -->
+        <div class="card full-width">
+            <h2>3. Select Timeframe & Calculate</h2>
+            <div class="timeframe-buttons">
+                <button onclick="calculateForPreset(7)">1 Week</button>
+                <button onclick="calculateForPreset(14)">2 Weeks</button>
+                <button onclick="calculateForPreset(21)">3 Weeks</button>
+                <button onclick="calculateForPreset(30)">1 Month</button>
+            </div>
+            <hr style="border-color: var(--border-color); margin: 20px 0;">
+            <div class="input-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <div>
+                    <label for="custom-months">Months</label>
+                    <input type="number" id="custom-months" value="0" min="0">
+                </div>
+                <div>
+                    <label for="custom-weeks">Weeks</label>
+                    <input type="number" id="custom-weeks" value="0" min="0">
+                </div>
+                <div>
+                    <label for="custom-days">Days</label>
+                    <input type="number" id="custom-days" value="0" min="0">
+                </div>
+            </div>
+            <button id="calculate-custom-btn">Calculate for Custom Timeframe</button>
+        </div>
+        
+        <!-- Results -->
+        <div id="results" class="card full-width" style="display: none;">
+            <!-- Results will be injected here -->
+        </div>
+        
+        <!-- Advanced Parameters -->
+        <div class="card full-width">
+            <h2>4. Advanced Parameters (Customize Game Values)</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                <div>
+                    <label>MD Bonus Run XP</label><input type="number" id="param-md-bonus-xp" value="225">
+                    <label>MD Bonus Run Module Cost</label><input type="number" id="param-md-bonus-cost" value="18">
+                    <label>MD Bonus Run Lunacy Gain</label><input type="number" id="param-md-bonus-lunacy" value="750">
+                </div>
+                <div>
+                    <label>MD Normal Run XP</label><input type="number" id="param-md-normal-xp" value="30">
+                    <label>MD Normal Run Module Cost</label><input type="number" id="param-md-normal-cost" value="5">
+                </div>
+                <div>
+                    <label>XP per Crate Tier</label><input type="number" id="param-xp-per-tier" value="10">
+                    <label>Crates per Tier</label><input type="number" id="param-crates-per-tier" value="3">
+                </div>
+                <div>
+                    <label>Enkephalin per Module</label><input type="number" id="param-enk-per-module" value="20">
+                    <label>Enkephalin per Crate</label><input type="number" id="param-enk-per-crate" value="60">
+                    <label>Enkephalin Regen Rate (mins)</label><input type="number" id="param-enk-regen-rate" value="6">
+                </div>
+                 <div>
+                    <label>Lunacy Refresh Base Cost</label><input type="number" id="param-lunacy-base" value="23">
+                    <label>Daily Lunacy Refreshes</label><input type="number" id="param-daily-refreshes" value="10">
+                    <label>Weekly Lunacy Spending Limit</label><input type="number" id="param-weekly-lunacy-limit" value="500">
+                </div>
+                <div>
+                    <label>Modules for Daily Luxcavations</label><input type="number" id="param-daily-lux-cost" value="5">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const sinnerList = [
+            "Yi Sang", "Faust", "Don Quixote", "Ryoshu", "Meursault", "Hong Lu", 
+            "Heathcliff", "Ishmael", "Rodion", "Sinclair", "Outis", "Gregor"
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial setup
+            const addSinnerBtn = document.getElementById('add-sinner-btn');
+            addSinnerBtn.addEventListener('click', () => addSinnerRow());
+
+            // Add initial default row
+            addSinnerRow("Yi Sang", 400, 0);
+
+            document.getElementById('calculate-custom-btn').addEventListener('click', () => {
+                const months = parseInt(document.getElementById('custom-months').value) || 0;
+                const weeks = parseInt(document.getElementById('custom-weeks').value) || 0;
+                const days = parseInt(document.getElementById('custom-days').value) || 0;
+                const totalDays = (months * 30) + (weeks * 7) + days;
+                if (totalDays > 0) {
+                    calculate(totalDays);
+                } else {
+                    alert("Please enter a valid custom timeframe.");
+                }
+            });
+        });
+
+        function addSinnerRow(name = sinnerList[0], needed = 400, current = 0) {
+            const container = document.getElementById('sinner-goals-container');
+            const sinnerId = `sinner-${Date.now()}`;
+            const row = document.createElement('div');
+            row.className = 'sinner-goal-row';
+            row.id = sinnerId;
+
+            const select = document.createElement('select');
+            sinnerList.forEach(sinner => {
+                const option = document.createElement('option');
+                option.value = sinner;
+                option.textContent = sinner;
+                if (sinner === name) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+
+            const neededInput = document.createElement('input');
+            neededInput.type = 'number';
+            neededInput.value = needed;
+            neededInput.placeholder = "Shards Needed";
+
+            const currentInput = document.createElement('input');
+            currentInput.type = 'number';
+            currentInput.value = current;
+            currentInput.placeholder = "Current Shards";
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'X';
+            removeBtn.className = 'remove-btn';
+            removeBtn.onclick = () => document.getElementById(sinnerId).remove();
+
+            row.appendChild(select);
+            row.appendChild(neededInput);
+            row.appendChild(currentInput);
+            row.appendChild(removeBtn);
+            container.appendChild(row);
+        }
+
+        function getInputs() {
+            const inputs = {};
+            
+            inputs.sinnerGoals = [];
+            const goalRows = document.querySelectorAll('.sinner-goal-row');
+            goalRows.forEach(row => {
+                const needed = parseInt(row.children[1].value) || 0;
+                const current = parseInt(row.children[2].value) || 0;
+                inputs.sinnerGoals.push({ needed, current });
+            });
+
+            const ids = [
+                'avg-shards-crate', 'current-crates', 'current-modules', 'current-enkephalin-crates', 'max-enkephalin',
+                'param-daily-lux-cost', 'param-md-bonus-xp', 'param-md-bonus-cost', 'param-md-bonus-lunacy',
+                'param-md-normal-xp', 'param-md-normal-cost', 'param-xp-per-tier', 'param-crates-per-tier',
+                'param-enk-per-module', 'param-enk-per-crate', 'param-enk-regen-rate', 'param-lunacy-base',
+                'param-daily-refreshes', 'param-weekly-lunacy-limit'
+            ];
+            
+            ids.forEach(id => {
+                const camelCaseId = id.replace(/-(\w)/g, (match, p1) => p1.toUpperCase());
+                inputs[camelCaseId] = parseFloat(document.getElementById(id).value) || 0;
+            });
+            
+            return inputs;
+        }
+
+        function calculateForPreset(days) {
+            calculate(days);
+        }
+        
+        function calculate(totalDays) {
+            const P = getInputs();
+
+            let totalShardsNeeded = 0;
+            P.sinnerGoals.forEach(goal => {
+                totalShardsNeeded += Math.max(0, goal.needed - goal.current);
+            });
+            const targetCrates = Math.ceil(totalShardsNeeded / P.avgShardsCrate);
+            const cratesToGrind = Math.max(0, targetCrates - P.currentCrates);
+
+            if (cratesToGrind <= 0) {
+                displayResults({
+                    status: 'complete',
+                    totalDays,
+                    targetCrates,
+                    currentCrates: P.currentCrates
+                });
+                return;
+            }
+
+            const xpPerCrate = P.paramXpPerTier / P.paramCratesPerTier;
+            const totalXpNeeded = cratesToGrind * xpPerCrate;
+            
+            const numWeeks = Math.floor(totalDays / 7);
+            const bonusRuns = numWeeks;
+            const xpFromBonus = bonusRuns * P.paramMdBonusXp;
+            
+            const remainingXp = Math.max(0, totalXpNeeded - xpFromBonus);
+            const normalRuns = Math.ceil(remainingXp / P.paramMdNormalXp);
+
+            const modulesForBonus = bonusRuns * P.paramMdBonusCost;
+            const modulesForNormal = normalRuns * P.paramMdNormalCost;
+            const modulesForMD = modulesForBonus + modulesForNormal;
+            const modulesForLux = P.paramDailyLuxCost * totalDays;
+            const totalModulesNeeded = modulesForMD + modulesForLux;
+
+            const enkephalinFromCrates = P.currentEnkephalinCrates * P.paramEnkPerCrate;
+            const modulesFromCrates = Math.floor(enkephalinFromCrates / P.paramEnkPerModule);
+
+            const enkPerDayNatural = (24 * 60) / P.paramEnkRegenRate;
+            const enkFromNaturalRegen = enkPerDayNatural * totalDays;
+            const modulesFromNaturalRegen = Math.floor(enkFromNaturalRegen / P.paramEnkPerModule);
+
+            const totalModulesAvailable = P.currentModules + modulesFromCrates + modulesFromNaturalRegen;
+            
+            const moduleDeficit = Math.max(0, totalModulesNeeded - totalModulesAvailable);
+            const enkDeficit = moduleDeficit * P.paramEnkPerModule;
+
+            let lunacySpent = 0;
+            let enkFromLunacy = 0;
+            let isPossible = true;
+
+            if (enkDeficit > 0) {
+                let weeklyLunacySpent = 0;
+                for (let day = 1; day <= totalDays; day++) {
+                    if ((day - 1) % 7 === 0) {
+                        weeklyLunacySpent = 0;
+                    }
+                    for (let refresh = 1; refresh <= P.paramDailyRefreshes; refresh++) {
+                        if (enkFromLunacy >= enkDeficit) break;
+                        
+                        const refreshCost = refresh * P.paramLunacyBase;
+                        if (weeklyLunacySpent + refreshCost > P.paramWeeklyLunacyLimit) {
+                            continue;
+                        }
+
+                        weeklyLunacySpent += refreshCost;
+                        lunacySpent += refreshCost;
+                        enkFromLunacy += P.maxEnkephalin;
+                    }
+                     if (enkFromLunacy >= enkDeficit) break;
+                }
+                if (enkFromLunacy < enkDeficit) {
+                    isPossible = false;
+                }
+            }
+            
+            // ** FIX: Corrected variable name from P.paramMdBonsuLunacy to P.paramMdBonusLunacy **
+            const lunacyFromBonus = bonusRuns * P.paramMdBonusLunacy;
+            const netLunacy = lunacyFromBonus - lunacySpent;
+            
+            const dailyNormalRuns = totalDays > 0 ? normalRuns / totalDays : Infinity;
+
+            displayResults({
+                status: isPossible ? 'possible' : 'impossible',
+                totalDays,
+                cratesToGrind,
+                targetCrates,
+                totalXpNeeded,
+                bonusRuns,
+                normalRuns,
+                totalRuns: bonusRuns + normalRuns,
+                modulesForMD,
+                modulesForLux,
+                totalModulesNeeded,
+                currentModules: P.currentModules,
+                modulesFromCrates,
+                modulesFromNaturalRegen,
+                totalModulesAvailable,
+                moduleDeficit,
+                lunacySpent,
+                lunacyFromBonus,
+                netLunacy,
+                dailyNormalRuns,
+                enkDeficit,
+                enkFromLunacy,
+                weeklyLunacyLimit: P.paramWeeklyLunacyLimit
+            });
+        }
+
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            
+            if (data.status === 'complete') {
+                resultsDiv.innerHTML = `
+                    <h3>Goal Achieved!</h3>
+                    <p>You already have enough Egoshard Crates for your goal. No grinding needed!</p>
+                `;
+                return;
+            }
+
+            const {
+                status, totalDays, cratesToGrind, targetCrates, totalXpNeeded, bonusRuns, normalRuns, totalRuns,
+                modulesForMD, modulesForLux, totalModulesNeeded, currentModules, modulesFromCrates,
+                modulesFromNaturalRegen, totalModulesAvailable, moduleDeficit, lunacySpent, lunacyFromBonus,
+                netLunacy, dailyNormalRuns, enkDeficit, enkFromLunacy, weeklyLunacyLimit
+            } = data;
+
+            let statusMessage = '';
+            if (status === 'possible') {
+                statusMessage = `<h3 class="success">Goal is Achievable in ${totalDays} days!</h3>`;
+            } else {
+                statusMessage = `<h3 class="error">Goal is NOT Achievable in ${totalDays} days</h3>
+                <p class="error">You have an Enkephalin deficit of <span class="highlight">${(enkDeficit - enkFromLunacy).toLocaleString()}</span> that cannot be covered by the allowed Lunacy refreshes. You need more time or more starting resources.</p>`;
+            }
+
+            resultsDiv.innerHTML = `
+                ${statusMessage}
+                
+                <div class="result-section">
+                    <h3>Goal Summary</h3>
+                    <p>Total Egoshard Crates to Grind: <span class="highlight">${cratesToGrind.toLocaleString()}</span> (to reach a total of ${targetCrates.toLocaleString()})</p>
+                    <p>This will require a total of <span class="highlight">${Math.ceil(totalXpNeeded).toLocaleString()}</span> Limbus Pass XP.</p>
+                </div>
+
+                <div class="result-section">
+                    <h3>Mirror Dungeon Plan</h3>
+                    <p>Total Runs Required: <span class="highlight">${totalRuns.toLocaleString()}</span></p>
+                    <ul>
+                        <li>Weekly Bonus Runs: <span class="highlight">${bonusRuns}</span></li>
+                        <li>Normal Runs: <span class="highlight">${normalRuns.toLocaleString()}</span></li>
+                    </ul>
+                </div>
+
+                <div class="result-section">
+                    <h3>Resource Analysis (Enkephalin Modules)</h3>
+                    <p>Total Modules Needed: <span class="highlight error">${totalModulesNeeded.toLocaleString()}</span></p>
+                    <ul>
+                        <li>For Mirror Dungeons: ${modulesForMD.toLocaleString()}</li>
+                        <li>For Daily Luxcavations: ${modulesForLux.toLocaleString()}</li>
+                    </ul>
+                    <p>Total Modules Available (pre-Lunacy): <span class="highlight success">${totalModulesAvailable.toLocaleString()}</span></p>
+                    <ul>
+                        <li>Currently Owned: ${currentModules.toLocaleString()}</li>
+                        <li>From Natural Regen: ${modulesFromNaturalRegen.toLocaleString()}</li>
+                        <li>From Enkephalin Crates: ${modulesFromCrates.toLocaleString()}</li>
+                    </ul>
+                    <p>Module Deficit to cover with Lunacy: <span class="highlight warning">${moduleDeficit.toLocaleString()} Modules</span></p>
+                </div>
+
+                <div class="result-section">
+                    <h3>Lunacy & Enkephalin Management</h3>
+                    <p>Enkephalin needed from refills: <span class="highlight warning">${enkDeficit.toLocaleString()}</span></p>
+                    <p>Enkephalin gained from refills: <span class="highlight success">${enkFromLunacy.toLocaleString()}</span></p>
+                    <p>Total Lunacy Cost for Refreshes: <span class="highlight error">${lunacySpent.toLocaleString()}</span> (Respecting the ${weeklyLunacyLimit}/week limit)</p>
+                    <p>Lunacy Gained from Weekly Bonus: <span class="highlight success">${lunacyFromBonus.toLocaleString()}</span></p>
+                    <p><strong>Net Lunacy Change: <span class="highlight ${netLunacy >= 0 ? 'success' : 'error'}">${netLunacy.toLocaleString()}</span></strong></p>
+                </div>
+                
+                <div class="result-section">
+                    <h3>Recommended Daily Schedule</h3>
+                    <p>Perform <span class="highlight">1 Weekly Bonus Run</span> each week.</p>
+                    <p>In addition, perform approximately <span class="highlight">${dailyNormalRuns.toFixed(2)}</span> Normal Mirror Dungeon runs per day.</p>
+                    <p><small>(This averages out to about <span class="highlight">${Math.ceil(dailyNormalRuns)}</span> runs per day, some days you might do more or less.)</small></p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
